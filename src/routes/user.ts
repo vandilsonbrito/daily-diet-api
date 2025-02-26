@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {knex} from "../database";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import bcrypt, { hash } from "bcryptjs";
 
 export async function userRoutes(app: FastifyInstance) {
     app.post('/login', async (req, reply) => {
@@ -17,11 +18,25 @@ export async function userRoutes(app: FastifyInstance) {
         if(!user) {
             return reply.status(404).send('User not found')
         }
-        else if (user.password !== password) {
-            return reply.status(401).send('Invalid credentials')
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return reply.status(401).send('Invalid password')
         }
 
-        return reply.status(200).send('User successfully logged in')
+        const token = await app.jwt.sign({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+        }, {
+            expiresIn: '1h',
+        })
+
+        return reply.status(200).send({ 
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            access_token: token 
+        })
     })
 
     app.post('/register', async (req, reply) => {
@@ -39,11 +54,13 @@ export async function userRoutes(app: FastifyInstance) {
             return reply.status(409).send('Email already in use')
         }
 
+        const hashedPassword = await hash(password, 10);
+
         await knex('users').insert({
             id: randomUUID(),
             name,
             email,
-            password
+            password: hashedPassword
         })
 
         return reply.status(201).send('User successfully created')
