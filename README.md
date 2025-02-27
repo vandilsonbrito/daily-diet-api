@@ -26,20 +26,22 @@ This API uses JWT (JSON Web Token) for authentication. Users must include a vali
 ## Endpoints
 
 ### User Routes
-- **POST /user/create** - Register a new user.
+- **POST /user/register** - Register a new user.
 - **POST /user/login** - Authenticate and receive a JWT token.
 
 ### Meal Routes
-- **POST /meals** - Log a new meal (Authenticated).
-- **PUT /meals/:id** - Update an existing meal (Authenticated).
-- **DELETE /meals/:id** - Delete a meal (Authenticated).
-- **GET /meals** - Get all meals for the authenticated user.
-- **GET /meals/:id** - View a specific meal.
-
-### User Metrics
-- **GET /user/metrics** - Retrieve the total number of meals, meals within the diet, meals outside the diet, and the best sequence of meals within the diet.
+- **POST /meals/create** - Log a new meal (Authenticated).
+- **PUT /meals/update/:id** - Update an existing meal (Authenticated).
+- **DELETE /meals/delete/:id** - Delete a meal (Authenticated).
+- **GET /meals/list** - Get all meals for the authenticated user.
+- **GET /meals/details/:id** - View a specific meal.
+#### User Metrics
+- **GET /meals/metrics** - Retrieve the total number of meals, meals within the diet, meals outside the diet, and the best sequence of meals within the diet.
 
 ## Environment Variables / Setup & Installation
+### Pre-requisite
+Ensure you have Node.js and npm installed.
+
 The application requires a `.env` file with the following variables:
 
 ```
@@ -52,10 +54,10 @@ PORT=5000
 SECRET_KEY=
 ```
 
-# Setup & Installation
+#### Setup & Installation
 1. Clone the repository:
    ```sh
-   https://github.com/vandilsonbrito/daily-diet-api.git
+   https://github.com/vandilsonbrito/meal-tracker-api.git
    ```
 2. Navigate to the project folder:
    ```sh
