@@ -59,7 +59,7 @@ export async function mealsRoutes(app: FastifyInstance) {
             const createMealsBodySchema = z.object({
                 name: z.string(),
                 description: z.string(),
-                date: z.date(),
+                date: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/),
                 meal_time: z.string(),
                 is_in_diet: z.boolean(),
                 user_id: z.string(),
@@ -71,7 +71,7 @@ export async function mealsRoutes(app: FastifyInstance) {
                 id: randomUUID(),
                 name,
                 description,
-                date,
+                date: date + ' ' + meal_time,
                 meal_time,
                 is_in_diet,
                 user_id,
@@ -106,7 +106,7 @@ export async function mealsRoutes(app: FastifyInstance) {
                 id: mealId,
             }).first().delete();
 
-            return reply.status(200).send('Meal successfully deleted')
+            return reply.status(204).send('Meal successfully deleted')
         }
     )
 
@@ -120,7 +120,7 @@ export async function mealsRoutes(app: FastifyInstance) {
             const updateMealBodySchema = z.object({
                 name: z.string().optional(),
                 description: z.string().optional(),
-                date: z.date().optional(),
+                date: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/).optional(),
                 meal_time: z.string().optional(),
                 is_in_diet: z.boolean().optional()
             })
@@ -152,7 +152,46 @@ export async function mealsRoutes(app: FastifyInstance) {
                 updated_at: knex.fn.now(), 
             })
 
-            return reply.status(200).send('Meal successfully updated')
+            return reply.status(204).send('Meal successfully updated')
+        }
+    )
+
+    app.get('/metrics', 
+        {
+            preHandler: [authenticate]
+        },
+        async (req: FastifyRequest, reply: FastifyReply) => {
+            const userId = (req.user as UserReqType).id;
+
+            const mealsAmount = await knex('meals').where({ user_id: userId }).count('*').first();
+            if(!mealsAmount) {
+                return reply.status(404).send('Meals not found')
+            }
+            const mealsInDiet = await knex('meals').where({ user_id: userId, is_in_diet: true }).count('*').first();
+            const mealsOutDiet = await knex('meals').where({ user_id: userId, is_in_diet: false }).count('*').first();
+            const ordainedMeals = await knex('meals')
+                .where({ user_id: userId })
+                .orderBy('date', 'desc')
+            
+            const getBestSequenceInDiet = () => {
+                let bestSequenceInDiet = 0;
+                let acc = 0;
+                ordainedMeals.forEach((meal) => {
+                    acc = meal.is_in_diet ? acc + 1 : 0;
+
+                    bestSequenceInDiet = Math.max(bestSequenceInDiet, acc)
+                })
+                return bestSequenceInDiet;
+            }
+
+            return reply.status(200).send({
+                user_id: userId,
+                mealsAmount: mealsAmount?.['count(*)'] || 0,
+                mealsInDiet: mealsInDiet?.['count(*)']  || 0,
+                mealsOutDiet: mealsOutDiet?.['count(*)']  || 0,
+                bestSequenceInDiet: getBestSequenceInDiet(),
+            })
         }
     )
 }
+
