@@ -3,6 +3,13 @@
 ## Description
 The Meal Tracker API allows users to manage their meals by creating, updating, deleting, and retrieving meal records. The API also provides user authentication with JWT and metrics on meal tracking, including total meals, meals within the diet, meals outside the diet, and the best sequence of meals within the diet.
 
+## Table of Contents
+- [Features](#features)
+- [Endpoints](#endpoints)
+- [Environment Variables / Setup & Installation](#environment-variables--setup--installation)
+- [Technologies Used](#technologies-used)
+- [Contacts](#contacts)
+
 ## Features
 - User authentication using JWT
 - User registration
